@@ -1,83 +1,111 @@
 #include <iostream>
-#include <fstream>
+#include <bits/stdc++.h>
 #include <string>
-#include <vector>
-#include <cstdlib>
+#include <ctype.h>
+#include "./pugixml-1.14/src/pugixml.hpp"
+
 using namespace std;
+using namespace pugi;
 
-// Function prototypes
-string getFile( string filename );                         // Reads whole file into a string buffer
-vector<string> getData( const string &text, string tag );  // Gets collection of items between given tags
-void stripTags( string &text );                            // Strips any tags
-
-
-//======================================================================
-
-
-int main()
+double evaluatePrefix(string prefixExp)
 {
-   string filename = "./sample.xml";
-   string tag = "author";
-// string tag = "object";
-   bool stripOtherTags = true;
 
-   string text = getFile( filename );
-   vector<string> all = getData( text, tag );
-   for ( string &s : all ) 
-   {
-      if ( stripOtherTags ) stripTags( s );
-      cout << s << '\n';
-   }
+    stack<double> operendStack;
+    int size = prefixExp.size() - 1;
+
+    for (int i = size; i >= 0; i--)
+    {
+        string tp = "";
+        while(prefixExp[i] != ' ' && i >= 0){
+            tp += prefixExp[i];
+            i--;
+        }
+        if(tp.length()>1)reverse(tp.begin(),tp.end());
+        if (tp!="+" && tp!="-" && tp!="*" && tp!="/"){
+            double x = stod(tp);
+            operendStack.push(x);
+        }
+        else
+        {
+            double o1 = operendStack.top();
+            operendStack.pop();
+            double o2 = operendStack.top();
+            operendStack.pop();
+            if (tp == "+")
+                operendStack.push(o1 + o2);
+            else if (tp == "-")
+                operendStack.push(o1 - o2);
+            else if (tp == "*")
+                operendStack.push(o1 * o2);
+            else if (tp == "/")
+                operendStack.push(o1 / o2);
+            else
+            {
+                cout << "Invalid Expression";
+                return -1;
+            }
+        }
+    }
+    return operendStack.top();
+}
+
+pair<double,double> getVal(string file_name){
+    xml_document doc;
+    if (!doc.load_file(file_name.c_str())) {
+        cout << "Failed to load XML file." << endl;
+        return {-1,-1};
+    }
+
+    xml_node root = doc.child("Kingdom");
+    if (!root) {
+        cout << "Root node not found." << endl;
+        return {-1,-1};
+    }
+
+    xml_node tot_W = root.child("KingdomWealth");
+    xml_node min_W = root.child("MinimumClanWealth");
+    if (!tot_W || !min_W) {
+        cout << "Child node not found." << endl;
+        return {-1,-1};
+    }
+    return {stod(tot_W.child_value()),stod(min_W.child_value())};
+    
+
+}
+
+void getClanWealth(string file_name, vector<pair<string,double>> &clandetails){
+    xml_document doc;
+    if (!doc.load_file(file_name.c_str())) {
+        cout << "Failed to load XML file." << endl;
+        return;
+    }
+
+    xml_node root = doc.child("Kingdom");
+    if (!root) {
+        cout << "Root node not found." << endl;
+        return;
+    }
+
+    for (xml_node clan = root.child("Clan"); clan; clan = clan.next_sibling("Clan")) {
+        clandetails.push_back({clan.child_value("Name"),evaluatePrefix(clan.child_value("Wealth"))});
+    }
+
 }
 
 
-//======================================================================
 
 
-string getFile( string filename )
-{
-   string buffer;
-   char c;
 
-   ifstream in( filename );   if ( !in ) { cout << filename << " not found";   exit( 1 ); }
-   while ( in.get( c ) ) buffer += c;
-   in.close();
+int main() {
+    vector<pair<string,double>> clandetails;
+    pair<double,double> wealth = getVal("sample.xml");
+    double tot_W = wealth.first;
+    double min_W = wealth.second;
+    getClanWealth("sample.xml",clandetails);
+    for(auto x:clandetails){
+        cout<<x.first<<" "<<x.second<<endl;
+    }
+    return 0;
 
-   return buffer;
-}
-
-
-//======================================================================
-
-
-vector<string> getData( const string &text, string tag )
-{                                                          
-   vector<string> collection;
-   unsigned int pos = 0, start;
-
-   while ( true )
-   {
-      start = text.find( "<" + tag, pos );   if ( start == string::npos ) return collection;
-      start = text.find( ">" , start );
-      start++;
-
-      pos = text.find( "</" + tag, start );   if ( pos == string::npos ) return collection;
-      collection.push_back( text.substr( start, pos - start ) );
-   }
-}
-
-
-//======================================================================
-
-
-void stripTags( string &text )
-{
-   unsigned int start = 0, pos;
-
-   while ( start < text.size() )
-   {
-      start = text.find( "<", start );    if ( start == string::npos ) break;
-      pos   = text.find( ">", start );    if ( pos   == string::npos ) break;
-      text.erase( start, pos - start + 1 );
-   }
+   
 }

@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Kingdom>
+    <KingdomWealth>375</KingdomWealth>
+    <MinimumClanWealth>30</MinimumClanWealth>
+    <Clan>
+        <Name>Warrior</Name>
+        <Wealth>- 20 8</Wealth>
+    </Clan>
+    <Clan>
+        <Name>Artisan</Name>
+        <Wealth>+ 10 4 * 12 2</Wealth>
+    </Clan>
+    <Clan>
+        <Name>Merchant</Name>
+        <Wealth>* 17 3 + 69 7</Wealth>
+    </Clan>
+    <Clan>
+        <Name>Peasant</Name>
+        <Wealth>/ 47 5 - 36 1</Wealth>
+    </Clan>
+</Kingdom>
